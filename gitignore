@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+env/
+venv/
+
+# SQLite database & instance folder
+instance/
+*.db
+
+# MacOS files
+.DS_Store
+
+# VS Code files
+.vscode/
+
+# Flask cache / compiled files
+*.pyc
