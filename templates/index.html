@@ -2,62 +2,131 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container py-5">
+<!-- Notification sound -->
+<audio id="notifySound">
+    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+</audio>
 
-    <h1 class="text-center mb-4 fw-bold">Task Manager</h1>
-
-    <!-- If no tasks -->
-    {% if tasks|length == 0 %}
-        <div class="alert alert-info text-center">No tasks found. Add your first task below!</div>
-    {% else %}
-
-    <table class="table table-bordered table-striped shadow-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>Task</th>
-                <th>Date</th>
-                <th style="width: 120px;">Action</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for task in tasks %}
-            <tr>
-                <td>{{ task.content }}</td>
-                <td>{{ task.date_created.date() }}</td>
-                <td>
-                    <a href="/update/{{ task.id }}" class="btn btn-sm btn-warning w-100 mb-1">Update</a>
-                    <a href="/delete/{{ task.id }}" class="btn btn-sm btn-danger w-100">Delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    {% endif %}
-
-    <div class="card shadow-sm mt-4">
-        <div class="card-body">
-            <h5 class="card-title">Add New Task</h5>
-            <form action="/" method="POST" class="d-flex gap-2">
-                <input type="text" class="form-control" name="content" placeholder="Enter task" required>
-                <button class="btn btn-primary" type="submit">Add</button>
-            </form>
-        </div>
-    </div>
-
+<!-- Top-right buttons -->
+<div class="top-buttons">
+    <button onclick="toggleDark()">🌙</button>
+    <button onclick="requestNotify()">🔔</button>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div class="content">
+    <h1>Task Manager</h1>
+
+    <div class="card">
+        <h2>Add New Task</h2>
+        <form method="POST" class="add-task-form">
+            <input type="text" name="content" placeholder="Enter task..." required>
+            <input type="datetime-local" name="due_time" required>
+            <input type="submit" value="Add">
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Your Tasks</h2>
+
+        {% for task in tasks %}
+        {% set diff = (task.due_time - now).total_seconds() %}
+        {% set days = (diff // 86400)|int %}
+        {% set hours = ((diff % 86400) // 3600)|int %}
+        {% set minutes = ((diff % 3600) // 60)|int %}
+
+        <div class="task-card {% if task.is_overdue() %}overdue{% endif %}"
+             data-task="{{ task.content }}"
+             data-time="{{ task.due_time.isoformat() }}">
+
+            <div>
+                <strong>{{ task.content }}</strong>
+                <div class="time">
+                    {{ task.due_time.strftime('%Y-%m-%d %H:%M') }}
+
+                    {% if diff <= 0 %}
+                        <span class="countdown overdue-text">(overdue)</span>
+
+                    {% elif days >= 1 %}
+                        <span class="countdown">
+                            (in {{ days }}d {{ hours }}h {{ minutes }}m)
+                        </span>
+
+                    {% else %}
+                        <span class="countdown">
+                            (in {{ hours }}h {{ minutes }}m)
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="/update/{{ task.id }}" class="btn warn">Edit</a>
+                <a href="/delete/{{ task.id }}" class="btn danger">Delete</a>
+            </div>
+        </div>
+
+        {% else %}
+        <p class="empty">No tasks yet 👋</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+/* ================= DARK MODE (PERSISTENT) ================= */
+function applySavedTheme() {
+    if (localStorage.getItem("darkMode") === "on") {
+        document.body.classList.add("dark");
+    }
+}
+
+function toggleDark() {
+    document.body.classList.toggle("dark");
+    localStorage.setItem(
+        "darkMode",
+        document.body.classList.contains("dark") ? "on" : "off"
+    );
+}
+
+applySavedTheme();
+
+/* ================= NOTIFICATIONS + SOUND ================= */
+function requestNotify() {
+    if ("Notification" in window) {
+        Notification.requestPermission();
+    }
+}
+
+function checkTasks() {
+    if (Notification.permission !== "granted") return;
+
+    const sound = document.getElementById("notifySound");
+
+    document.querySelectorAll(".task-card").forEach(card => {
+        if (card.dataset.notified) return;
+
+        const due = new Date(card.dataset.time);
+        const now = new Date();
+
+        if (now >= due) {
+            new Notification("⏰ Task Due", {
+                body: card.dataset.task
+            });
+            sound.play().catch(() => {});
+            card.dataset.notified = "true";
+        }
+    });
+}
+
+setInterval(checkTasks, 30000);
+</script>
 
 </body>
 </html>
+
