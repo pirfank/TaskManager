@@ -1,132 +1,125 @@
+* {
+    box-sizing: border-box;
+    font-family: system-ui, sans-serif;
+}
+
 body {
     margin: 0;
-    background: #f4f6f9;
-    font-family: system-ui, sans-serif;
-    display: flex;
-    justify-content: center;
     min-height: 100vh;
-    transition: background 0.3s, color 0.3s;
+    background: radial-gradient(circle at top, #1a2740, #020617);
+    color: #e5e7eb;
 }
 
-/* Dark mode */
-body.dark {
-    background: #121212;
-    color: #eaeaea;
+a {
+    text-decoration: none; /* 🔥 removes underline */
 }
 
-body.dark .content {
-    background: #1e1e1e;
+.top-actions {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
 }
 
-body.dark .card {
-    background: #2a2a2a;
+.top-actions a, .top-actions button {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: transform .2s, background .2s;
 }
 
-body.dark .task-card {
-    background: #333;
+.top-actions a:hover,
+.top-actions button:hover {
+    transform: scale(1.1);
+    background: rgba(255,255,255,0.25);
 }
 
-.content {
-    max-width: 800px;
-    width: 100%;
-    margin: 40px;
-    background: white;
-    padding: 30px;
-    border-radius: 14px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+.app-container {
+    max-width: 420px;
+    margin: 90px auto;
+    padding: 0 16px;
 }
 
-h1, h2 {
+h1 {
     text-align: center;
+    margin-bottom: 32px;
 }
 
 .card {
-    margin-top: 30px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 18px;
     padding: 20px;
-    background: #fafafa;
-    border-radius: 12px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(12px);
 }
 
 .add-task-form {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
 }
 
 input {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: rgba(255,255,255,0.18);
+    color: white;
 }
 
-input[type="submit"] {
-    background: #0d6efd;
-    color: white;
+.btn {
+    padding: 10px 14px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
+    transition: transform .15s, opacity .15s;
 }
 
-.task-card {
+.btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.primary { background: #3b82f6; color: white; }
+.warning { background: #facc15; color: black; }
+.danger  { background: #ef4444; color: white; }
+
+.task-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    margin-top: 15px;
-    background: white;
-    border-radius: 10px;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.12);
+    margin-bottom: 12px;
+    transition: transform .2s, box-shadow .2s;
 }
 
-.task-card.overdue {
-    border-left: 6px solid #dc3545;
-    background: #fff0f0;
+.task-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
 }
 
-.time {
-    font-size: 0.9rem;
-    color: gray;
+.task-item.overdue {
+    border-left: 4px solid #ff5f5f;
 }
 
-.countdown {
-    margin-left: 6px;
-    font-weight: 500;
+.task-title {
+    font-size: 16px;
+    font-weight: 600;
 }
 
-.overdue-text {
-    color: #dc3545;
+.task-time {
+    font-size: 13px;
+    color: #a8b2c1;
 }
-
-.actions .btn {
-    padding: 6px 12px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: white;
-    margin-left: 6px;
-}
-
-.btn.warn { background: #ffc107; color: black; }
-.btn.danger { background: #dc3545; }
 
 .empty {
     text-align: center;
-    opacity: 0.7;
-}
-
-/* Top buttons */
-.top-buttons {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-.top-buttons button {
-    border: none;
-    border-radius: 20px;
-    padding: 8px 12px;
-    cursor: pointer;
-    background: #0d6efd;
-    color: white;
-    font-size: 16px;
+    opacity: 0.6;
 }

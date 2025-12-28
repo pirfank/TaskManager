@@ -1,132 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Task Manager</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Task Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body>
 
-<!-- Notification sound -->
-<audio id="notifySound">
-    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
-</audio>
+<body class="dark">
 
-<!-- Top-right buttons -->
-<div class="top-buttons">
-    <button onclick="toggleDark()">🌙</button>
-    <button onclick="requestNotify()">🔔</button>
+<!-- TOP ACTIONS -->
+<div class="top-actions">
+    <button id="themeToggle"><i class="fa-solid fa-moon"></i></button>
+    <button id="enableNotify"><i class="fa-solid fa-bell"></i></button>
+    <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i></a>
 </div>
 
-<div class="content">
+<div class="app-container">
     <h1>Task Manager</h1>
 
+    <!-- ADD TASK -->
     <div class="card">
         <h2>Add New Task</h2>
         <form method="POST" class="add-task-form">
             <input type="text" name="content" placeholder="Enter task..." required>
             <input type="datetime-local" name="due_time" required>
-            <input type="submit" value="Add">
+            <button class="btn primary">Add</button>
         </form>
     </div>
 
+    <!-- TASK LIST -->
     <div class="card">
         <h2>Your Tasks</h2>
 
-        {% for task in tasks %}
-        {% set diff = (task.due_time - now).total_seconds() %}
-        {% set days = (diff // 86400)|int %}
-        {% set hours = ((diff % 86400) // 3600)|int %}
-        {% set minutes = ((diff % 3600) // 60)|int %}
-
-        <div class="task-card {% if task.is_overdue() %}overdue{% endif %}"
-             data-task="{{ task.content }}"
-             data-time="{{ task.due_time.isoformat() }}">
-
-            <div>
-                <strong>{{ task.content }}</strong>
-                <div class="time">
-                    {{ task.due_time.strftime('%Y-%m-%d %H:%M') }}
-
-                    {% if diff <= 0 %}
-                        <span class="countdown overdue-text">(overdue)</span>
-
-                    {% elif days >= 1 %}
-                        <span class="countdown">
-                            (in {{ days }}d {{ hours }}h {{ minutes }}m)
-                        </span>
-
-                    {% else %}
-                        <span class="countdown">
-                            (in {{ hours }}h {{ minutes }}m)
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="actions">
-                <a href="/update/{{ task.id }}" class="btn warn">Edit</a>
-                <a href="/delete/{{ task.id }}" class="btn danger">Delete</a>
-            </div>
-        </div>
-
+        {% if tasks|length == 0 %}
+            <p class="empty">No tasks yet 👋</p>
         {% else %}
-        <p class="empty">No tasks yet 👋</p>
-        {% endfor %}
+            {% for task in tasks %}
+                <div class="task-item {% if task.is_overdue() %}overdue{% endif %}"
+                     data-id="{{ task.id }}"
+                     data-time="{{ task.due_time.timestamp() }}">
+
+                    <div class="task-info">
+                        <div class="task-title">{{ task.content }}</div>
+                        <div class="task-time" id="time-{{ task.id }}"></div>
+                    </div>
+
+                    <div class="task-actions">
+                        <a href="/update/{{ task.id }}" class="btn warning">Edit</a>
+                        <a href="/delete/{{ task.id }}" class="btn danger">Delete</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 </div>
 
+<!-- AUDIO -->
+<audio id="beep">
+    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg">
+</audio>
+
 <script>
-/* ================= DARK MODE (PERSISTENT) ================= */
-function applySavedTheme() {
-    if (localStorage.getItem("darkMode") === "on") {
-        document.body.classList.add("dark");
-    }
-}
-
-function toggleDark() {
+/* ===== THEME ===== */
+document.getElementById("themeToggle").onclick = () =>
     document.body.classList.toggle("dark");
-    localStorage.setItem(
-        "darkMode",
-        document.body.classList.contains("dark") ? "on" : "off"
-    );
-}
 
-applySavedTheme();
+/* ===== NOTIFICATION PERMISSION ===== */
+document.getElementById("enableNotify").onclick = async () => {
+    await Notification.requestPermission();
+};
 
-/* ================= NOTIFICATIONS + SOUND ================= */
-function requestNotify() {
-    if ("Notification" in window) {
-        Notification.requestPermission();
+/* ===== REMINDER + COUNTDOWN ENGINE ===== */
+const fired = new Set();
+const beep = document.getElementById("beep");
+
+function formatRemaining(seconds) {
+    if (seconds < 0) {
+        seconds = Math.abs(seconds);
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `⚠️ Overdue by ${m}m ${s}s`;
     }
+
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) return `⏳ ${h}h ${m}m ${s}s remaining`;
+    if (m > 0) return `⏳ ${m}m ${s}s remaining`;
+    return `⏳ ${s}s remaining`;
 }
 
-function checkTasks() {
-    if (Notification.permission !== "granted") return;
+setInterval(() => {
+    const now = Math.floor(Date.now() / 1000);
 
-    const sound = document.getElementById("notifySound");
+    document.querySelectorAll(".task-item").forEach(task => {
+        const due = parseInt(task.dataset.time);
+        const id = task.dataset.id;
+        const diff = due - now;
 
-    document.querySelectorAll(".task-card").forEach(card => {
-        if (card.dataset.notified) return;
+        // update countdown text
+        document.getElementById(`time-${id}`).innerText =
+            formatRemaining(diff);
 
-        const due = new Date(card.dataset.time);
-        const now = new Date();
+        // fire notification once
+        if (diff <= 0 && !fired.has(id)) {
+            fired.add(id);
 
-        if (now >= due) {
-            new Notification("⏰ Task Due", {
-                body: card.dataset.task
-            });
-            sound.play().catch(() => {});
-            card.dataset.notified = "true";
+            beep.currentTime = 0;
+            beep.play();
+
+            if (Notification.permission === "granted") {
+                new Notification("⏰ Task Due", {
+                    body: task.querySelector(".task-title").innerText
+                });
+            }
         }
     });
-}
-
-setInterval(checkTasks, 30000);
+}, 1000);
 </script>
 
 </body>
 </html>
-
