@@ -1,128 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Task Manager</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>Task Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body class="dark">
 
-<!-- TOP ACTIONS -->
-<div class="top-actions">
-    <button id="themeToggle"><i class="fa-solid fa-moon"></i></button>
-    <button id="enableNotify"><i class="fa-solid fa-bell"></i></button>
-    <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+<div id="app"
+     class="app-container"
+     data-nickname="{{ nickname }}">
+
+  <h1>Welcome, {{ nickname }} 👋</h1>
+
+  <!-- SYSTEM CONTROLS -->
+  <div class="card center system-controls">
+    <button class="btn neon large" onclick="enableNotifications()">
+      🔔 Enable Voice & Notifications
+    </button>
+
+    <form method="POST" action="/logout">
+      <button class="btn ghost logout">Logout</button>
+    </form>
+  </div>
+
+  <!-- ADD TASK -->
+  <div class="card">
+    <h2>Add New Task</h2>
+
+    <form method="POST">
+      <input name="content" placeholder="Task..." maxlength="500" required>
+      <input type="datetime-local" name="due_time" required>
+      <button class="btn primary">Add</button>
+    </form>
+  </div>
+
+  <!-- TASK LIST -->
+  <div class="card">
+    <h2>Your Tasks</h2>
+
+    {% for task in tasks %}
+      <div class="task {% if task.completed %}done{% endif %}"
+           data-task="{{ task.content }}"
+           data-due="{{ task.due_time.isoformat() }}">
+
+        <div class="task-info">
+          <strong>{{ task.content }}</strong>
+          <small>{{ task.due_time.strftime("%d %b %Y, %H:%M") }}</small>
+        </div>
+
+        <div class="actions">
+          <a href="/update/{{ task.id }}" class="btn icon edit" title="Edit">
+            ✏️
+          </a>
+
+          <a href="/complete/{{ task.id }}" class="btn icon success" title="Done">
+            {% if task.completed %}↩️{% else %}✔️{% endif %}
+          </a>
+
+          <a href="/delete/{{ task.id }}" class="btn icon danger" title="Delete">
+            🗑️
+          </a>
+        </div>
+      </div>
+    {% else %}
+      <p class="center">No tasks yet 🚀</p>
+    {% endfor %}
+  </div>
+
 </div>
 
-<div class="app-container">
-    <h1>Task Manager</h1>
-
-    <!-- ADD TASK -->
-    <div class="card">
-        <h2>Add New Task</h2>
-        <form method="POST" class="add-task-form">
-            <input type="text" name="content" placeholder="Enter task..." required>
-            <input type="datetime-local" name="due_time" required>
-            <button class="btn primary">Add</button>
-        </form>
-    </div>
-
-    <!-- TASK LIST -->
-    <div class="card">
-        <h2>Your Tasks</h2>
-
-        {% if tasks|length == 0 %}
-            <p class="empty">No tasks yet 👋</p>
-        {% else %}
-            {% for task in tasks %}
-                <div class="task-item {% if task.is_overdue() %}overdue{% endif %}"
-                     data-id="{{ task.id }}"
-                     data-time="{{ task.due_time.timestamp() }}">
-
-                    <div class="task-info">
-                        <div class="task-title">{{ task.content }}</div>
-                        <div class="task-time" id="time-{{ task.id }}"></div>
-                    </div>
-
-                    <div class="task-actions">
-                        <a href="/update/{{ task.id }}" class="btn warning">Edit</a>
-                        <a href="/delete/{{ task.id }}" class="btn danger">Delete</a>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
-
-<!-- AUDIO -->
-<audio id="beep">
-    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg">
-</audio>
-
-<script>
-/* ===== THEME ===== */
-document.getElementById("themeToggle").onclick = () =>
-    document.body.classList.toggle("dark");
-
-/* ===== NOTIFICATION PERMISSION ===== */
-document.getElementById("enableNotify").onclick = async () => {
-    await Notification.requestPermission();
-};
-
-/* ===== REMINDER + COUNTDOWN ENGINE ===== */
-const fired = new Set();
-const beep = document.getElementById("beep");
-
-function formatRemaining(seconds) {
-    if (seconds < 0) {
-        seconds = Math.abs(seconds);
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `⚠️ Overdue by ${m}m ${s}s`;
-    }
-
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-
-    if (h > 0) return `⏳ ${h}h ${m}m ${s}s remaining`;
-    if (m > 0) return `⏳ ${m}m ${s}s remaining`;
-    return `⏳ ${s}s remaining`;
-}
-
-setInterval(() => {
-    const now = Math.floor(Date.now() / 1000);
-
-    document.querySelectorAll(".task-item").forEach(task => {
-        const due = parseInt(task.dataset.time);
-        const id = task.dataset.id;
-        const diff = due - now;
-
-        // update countdown text
-        document.getElementById(`time-${id}`).innerText =
-            formatRemaining(diff);
-
-        // fire notification once
-        if (diff <= 0 && !fired.has(id)) {
-            fired.add(id);
-
-            beep.currentTime = 0;
-            beep.play();
-
-            if (Notification.permission === "granted") {
-                new Notification("⏰ Task Due", {
-                    body: task.querySelector(".task-title").innerText
-                });
-            }
-        }
-    });
-}, 1000);
-</script>
-
+<script src="{{ url_for('static', filename='js/notify.js') }}"></script>
 </body>
 </html>

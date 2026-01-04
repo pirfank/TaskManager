@@ -1,125 +1,165 @@
 * {
-    box-sizing: border-box;
-    font-family: system-ui, sans-serif;
+  box-sizing: border-box;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    background: radial-gradient(circle at top, #1a2740, #020617);
-    color: #e5e7eb;
-}
-
-a {
-    text-decoration: none; /* 🔥 removes underline */
-}
-
-.top-actions {
-    position: fixed;
-    top: 16px;
-    right: 20px;
-    display: flex;
-    gap: 12px;
-}
-
-.top-actions a, .top-actions button {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.15);
-    border: none;
-    color: white;
-    cursor: pointer;
-    transition: transform .2s, background .2s;
-}
-
-.top-actions a:hover,
-.top-actions button:hover {
-    transform: scale(1.1);
-    background: rgba(255,255,255,0.25);
+body.dark {
+  min-height: 100vh;
+  margin: 0;
+  background: radial-gradient(circle at top, #1e3a8a, #020617);
+  color: #e5e7eb;
 }
 
 .app-container {
-    max-width: 420px;
-    margin: 90px auto;
-    padding: 0 16px;
+  width: 420px;
+  margin: 60px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 32px;
+.center {
+  text-align: center;
 }
 
+h1, h2 {
+  font-weight: 600;
+  text-align: center;
+}
+
+/* CARDS */
 .card {
-    background: rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.add-task-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
+/* INPUTS */
 input {
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    background: rgba(255,255,255,0.18);
-    color: white;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  outline: none;
 }
 
+/* BASE BUTTON */
 .btn {
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: transform .15s, opacity .15s;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
+/* PRESS EFFECT */
+.btn:active {
+  transform: translateY(1px) scale(0.97);
 }
 
-.primary { background: #3b82f6; color: white; }
-.warning { background: #facc15; color: black; }
-.danger  { background: #ef4444; color: white; }
-
-.task-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.12);
-    margin-bottom: 12px;
-    transition: transform .2s, box-shadow .2s;
+/* PRIMARY */
+.btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
 }
 
-.task-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+.btn.primary:hover {
+  box-shadow: 0 0 20px rgba(99,102,241,0.8);
 }
 
-.task-item.overdue {
-    border-left: 4px solid #ff5f5f;
+/* NEON */
+.btn.neon {
+  background: transparent;
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
 }
 
-.task-title {
-    font-size: 16px;
-    font-weight: 600;
+.btn.neon.large {
+  width: 100%;
+  margin-bottom: 10px;
 }
 
-.task-time {
-    font-size: 13px;
-    color: #a8b2c1;
+.btn.neon:hover {
+  background: rgba(56,189,248,0.1);
+  box-shadow: 0 0 25px rgba(56,189,248,0.9);
 }
 
-.empty {
-    text-align: center;
-    opacity: 0.6;
+/* LOGOUT (ghost button) */
+.btn.ghost {
+  background: transparent;
+  color: #9ca3af;
+}
+
+.btn.ghost:hover {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239,68,68,0.8);
+}
+
+/* ICON BUTTONS */
+.btn.icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  backdrop-filter: blur(12px);
+}
+
+/* ICON HOVERS */
+.btn.icon.edit:hover {
+  box-shadow: 0 0 18px rgba(59,130,246,0.9);
+  transform: scale(1.15);
+}
+
+.btn.icon.success:hover {
+  box-shadow: 0 0 18px rgba(34,197,94,0.9);
+  transform: scale(1.15);
+}
+
+.btn.icon.danger:hover {
+  box-shadow: 0 0 18px rgba(239,68,68,0.9);
+  transform: scale(1.15);
+}
+
+/* TASK */
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 14px;
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.task.done {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.task-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+small {
+  display: block;
+  opacity: 0.7;
 }
